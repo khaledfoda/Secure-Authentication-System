@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Page</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .info { margin: 10px 0; }
+    pre { background: #f4f4f4; padding: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>Admin Dashboard</h2>
+
+<h3>Stored User Data</h3>
+<div id="userData"></div>
+
+<h3>JWT Token</h3>
+<pre id="jwtToken"></pre>
+
+<h3>API Response</h3>
+<pre id="apiResponse"></pre>
+
+<br>
+<button onclick="logout()">Logout</button>
+
+<script>
+const token = localStorage.getItem("token");
+const userId = localStorage.getItem("userId");
+const role = localStorage.getItem("role");
+
+if (!token || role !== "admin") {
+  document.body.innerHTML = "<h1>Forbidden</h1><p>You do not have access to this page.</p><button onclick=\"window.location.href='login.html'\">Login</button>";
+} else {
+  document.getElementById("jwtToken").textContent = token;
+  document.getElementById("userData").textContent = "User ID: " + (userId || "Not found");
+
+  async function getAdminData() {
+    const res = await fetch("http://localhost:3000/api/admin", {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      document.body.innerHTML = "<h1>Forbidden</h1><p>" + (data.message || "Access denied") + "</p><button onclick=\"window.location.href='login.html'\">Login</button>";
+      return;
+    }
+    document.getElementById("apiResponse").textContent = JSON.stringify(data, null, 2);
+  }
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("role");
+    window.location.href = "login.html";
+  }
+
+  getAdminData();
+}
+</script>
+
+</body>
+</html>
